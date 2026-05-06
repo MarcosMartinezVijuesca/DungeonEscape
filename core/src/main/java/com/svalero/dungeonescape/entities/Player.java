@@ -97,9 +97,13 @@ public class Player {
     }
 
     public void takeDamage(int damage) {
-        if (invincibleTimer > 0) return; // invencible tras recibir daño
+        if (invincibleTimer > 0) return;
         health -= damage;
-        invincibleTimer = 1.5f; // 1.5 segundos de invencibilidad
+
+        // Menos invencibilidad en dificultad alta
+        float invTime = 1.5f / GameState.getInstance().getDifficultyMultiplier();
+        invincibleTimer = invTime;
+
         SoundManager.getInstance().playHit();
 
         if (health <= 0) {
