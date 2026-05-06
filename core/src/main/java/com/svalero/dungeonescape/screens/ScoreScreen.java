@@ -32,31 +32,50 @@ public class ScoreScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        Table table = new Table();
-        table.setFillParent(true);
-        table.center();
-        stage.addActor(table);
+        Table rootTable = new Table();
+        rootTable.setFillParent(true);
+        rootTable.center();
+        stage.addActor(rootTable);
+
+        Table contentTable = new Table();
+        contentTable.center();
 
         Label titleLabel = new Label("TOP 10 PUNTUACIONES", skin);
-        table.add(titleLabel).padBottom(30).row();
+        contentTable.add(titleLabel).padBottom(30).row();
 
-        // Cargar y mostrar puntuaciones
         List<ScoreManager.ScoreEntry> scores = ScoreManager.loadScores();
 
         if (scores.isEmpty()) {
             Label emptyLabel = new Label("No hay puntuaciones todavia", skin);
-            table.add(emptyLabel).padBottom(20).row();
+            contentTable.add(emptyLabel).padBottom(20).row();
         } else {
             for (int i = 0; i < scores.size(); i++) {
                 ScoreManager.ScoreEntry entry = scores.get(i);
                 String line = (i + 1) + ".  " + entry.name + "  -  " + entry.score + " pts";
                 Label scoreLabel = new Label(line, skin);
-                table.add(scoreLabel).padBottom(8).row();
+                contentTable.add(scoreLabel).padBottom(8).row();
             }
         }
 
-        TextButton btnBack = new TextButton("Volver", skin);
-        table.add(btnBack).width(200).height(50).padTop(30).row();
+        com.badlogic.gdx.scenes.scene2d.ui.ScrollPane scrollPane =
+            new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane(contentTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollingDisabled(true, false);
+
+        TextButton btnClear = new TextButton("Borrar puntuaciones", skin);
+        TextButton btnBack = new TextButton("Menu Principal", skin);
+
+        rootTable.add(scrollPane).width(500).height(300).padBottom(15).row();
+        rootTable.add(btnClear).width(250).height(50).padBottom(10).row();
+        rootTable.add(btnBack).width(200).height(50).row();
+
+        btnClear.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Gdx.files.local("scores.txt").delete();
+                game.setScreen(new ScoreScreen(game));
+            }
+        });
 
         btnBack.addListener(new ChangeListener() {
             @Override
