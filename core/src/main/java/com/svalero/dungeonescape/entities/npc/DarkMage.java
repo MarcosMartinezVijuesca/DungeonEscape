@@ -43,7 +43,7 @@ public class DarkMage extends NPC {
                 continue;
             }
             proj[0] += proj[2] * delta;
-            if (proj[0] > 900 || proj[0] < -50) toRemove.add(proj);
+            if (proj[0] > 2500 || proj[0] < -50) toRemove.add(proj);
         }
         projectiles.removeAll(toRemove);
     }

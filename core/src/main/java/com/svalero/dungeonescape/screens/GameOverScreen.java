@@ -9,16 +9,20 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.svalero.dungeonescape.DungeonEscape;
 import com.svalero.dungeonescape.managers.GameState;
+import com.svalero.dungeonescape.managers.ScoreManager;
 
 public class GameOverScreen implements Screen {
 
     private final DungeonEscape game;
     private Stage stage;
     private Skin skin;
+    private TextField nameField;
+    private boolean scoreSaved = false;
 
     public GameOverScreen(DungeonEscape game) {
         this.game = game;
@@ -36,26 +40,51 @@ public class GameOverScreen implements Screen {
         stage.addActor(table);
 
         Label titleLabel = new Label("GAME OVER", skin);
-        Label scoreLabel = new Label("Puntuacion: " + GameState.getInstance().getScore(), skin);
-        TextButton btnMenu = new TextButton("Menu Principal", skin);
-        TextButton btnExit = new TextButton("Salir", skin);
+        Label scoreLabel = new Label("Puntuacion final: " + GameState.getInstance().getScore(), skin);
+        Label nameLabel = new Label("Introduce tu nombre:", skin);
 
-        table.add(titleLabel).padBottom(30).row();
-        table.add(scoreLabel).padBottom(50).row();
-        table.add(btnMenu).width(250).height(50).padBottom(15).row();
-        table.add(btnExit).width(250).height(50).row();
+        nameField = new TextField("", skin);
+        nameField.setMaxLength(20);
+        nameField.setMessageText("Tu nombre...");
+
+        TextButton btnSave = new TextButton("Guardar puntuacion", skin);
+        TextButton btnScores = new TextButton("Ver Top 10", skin);
+        TextButton btnMenu = new TextButton("Menu Principal", skin);
+
+        table.add(titleLabel).padBottom(20).row();
+        table.add(scoreLabel).padBottom(30).row();
+        table.add(nameLabel).padBottom(10).row();
+        table.add(nameField).width(300).height(40).padBottom(15).row();
+        table.add(btnSave).width(250).height(50).padBottom(15).row();
+        table.add(btnScores).width(250).height(50).padBottom(15).row();
+        table.add(btnMenu).width(250).height(50).row();
+
+        btnSave.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String name = nameField.getText().trim();
+                if (name.isEmpty()) name = "Anonimo";
+                if (!scoreSaved) {
+                    ScoreManager.saveScore(name, GameState.getInstance().getScore());
+                    scoreSaved = true;
+                    GameState.getInstance().setPlayerName(name);
+                    btnSave.setText("Puntuacion guardada!");
+                    btnSave.setDisabled(true);
+                }
+            }
+        });
+
+        btnScores.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                game.setScreen(new ScoreScreen(game));
+            }
+        });
 
         btnMenu.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.setScreen(new MainMenuScreen(game));
-            }
-        });
-
-        btnExit.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                Gdx.app.exit();
             }
         });
     }
@@ -75,8 +104,12 @@ public class GameOverScreen implements Screen {
 
     @Override public void pause() {}
     @Override public void resume() {}
-    @Override public void hide() { dispose(); }
-    @Override public void dispose() {
+
+    @Override
+    public void hide() { dispose(); }
+
+    @Override
+    public void dispose() {
         stage.dispose();
         skin.dispose();
     }
