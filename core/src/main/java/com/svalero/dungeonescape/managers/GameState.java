@@ -29,6 +29,8 @@ public class GameState {
         playerName = "";
     }
 
+
+
     public int getScore() { return score; }
     public void addScore(int points) { this.score += points; }
 
