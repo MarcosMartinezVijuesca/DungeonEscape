@@ -17,6 +17,13 @@ public class Ogre extends NPC {
         this.rightBound = rightBound;
     }
 
+    public Ogre(float x, float y, float leftBound, float rightBound, float multiplier) {
+        super(x, y, 56, 72, (int)(300 * multiplier), 500);
+        this.leftBound = leftBound;
+        this.rightBound = rightBound;
+        this.speed = 60f * multiplier;
+    }
+
     @Override
     public void update(float delta, float playerX, float playerY) {
         if (!alive) return;

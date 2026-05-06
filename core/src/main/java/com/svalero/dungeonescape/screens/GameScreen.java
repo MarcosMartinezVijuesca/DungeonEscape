@@ -70,34 +70,38 @@ public class GameScreen implements Screen {
     private void setupLevel() {
         player = new Player(100, 50);
 
+
+
         platforms = new float[][]{
-            {0, 20, 2400, 20},   // suelo principal largo
-            {100, 140, 150, 20},   // plataforma 1
-            {320, 220, 150, 20},   // plataforma 2
-            {550, 170, 150, 20},   // plataforma 3
-            {750, 250, 120, 20},   // plataforma 4
-            {950, 180, 150, 20},   // plataforma 5
-            {1150, 280, 130, 20},   // plataforma 6
-            {1350, 200, 150, 20},   // plataforma 7
-            {1550, 300, 120, 20},   // plataforma 8
-            {1750, 220, 150, 20},   // plataforma 9
-            {1950, 150, 130, 20},   // plataforma 10
-            {2100, 260, 150, 20},   // plataforma 11
+            {0,    20,  2400, 20},   // suelo principal largo
+            {100,  140, 150,  20},   // plataforma 1
+            {320,  220, 150,  20},   // plataforma 2
+            {550,  170, 150,  20},   // plataforma 3
+            {750,  250, 120,  20},   // plataforma 4
+            {950,  180, 150,  20},   // plataforma 5
+            {1150, 280, 130,  20},   // plataforma 6
+            {1350, 200, 150,  20},   // plataforma 7
+            {1550, 300, 120,  20},   // plataforma 8
+            {1750, 220, 150,  20},   // plataforma 9
+            {1950, 150, 130,  20},   // plataforma 10
+            {2100, 260, 150,  20},   // plataforma 11
         };
 
+        float m = GameState.getInstance().getDifficultyMultiplier();
+        Gdx.app.log("GameScreen", "Dificultad: " + GameState.getInstance().getDifficulty() + " - Multiplicador: " + m);
+
         skeletons = new ArrayList<>();
-        skeletons.add(new Skeleton(300, 40, 200, 500));
-        skeletons.add(new Skeleton(700, 40, 550, 900));
-        skeletons.add(new Skeleton(1200, 40, 1000, 1400));
-        skeletons.add(new Skeleton(1800, 40, 1600, 2000));
+        skeletons.add(new Skeleton(300,  40, 200,  500,  m));
+        skeletons.add(new Skeleton(700,  40, 550,  900,  m));
+        skeletons.add(new Skeleton(1200, 40, 1000, 1400, m));
+        skeletons.add(new Skeleton(1800, 40, 1600, 2000, m));
 
         darkMages = new ArrayList<>();
-        darkMages.add(new DarkMage(800, 40));
-        darkMages.add(new DarkMage(1500, 40));
-        darkMages.add(new DarkMage(2100, 40));
+        darkMages.add(new DarkMage(800,  40, m));
+        darkMages.add(new DarkMage(1500, 40, m));
+        darkMages.add(new DarkMage(2100, 40, m));
 
-        ogre = new Ogre(2200, 40, 2000, 2350);
-
+        ogre = new Ogre(2200, 40, 2000, 2350, m);
     }
 
     @Override
@@ -224,35 +228,37 @@ public class GameScreen implements Screen {
 
     private void handleNPCPlayerCollisions() {
         if (!player.isAlive()) return;
+        float m = GameState.getInstance().getDifficultyMultiplier();
 
         for (Skeleton s : skeletons) {
             if (s.isAlive() && s.overlaps(player.getX(), player.getY(),
                 player.getWidth(), player.getHeight())) {
-                player.takeDamage(10);
+                player.takeDamage((int)(10 * m));
             }
         }
-        for (DarkMage m : darkMages) {
-            if (m.isAlive() && m.overlaps(player.getX(), player.getY(),
+        for (DarkMage dm : darkMages) {
+            if (dm.isAlive() && dm.overlaps(player.getX(), player.getY(),
                 player.getWidth(), player.getHeight())) {
-                player.takeDamage(15);
+                player.takeDamage((int)(15 * m));
             }
         }
         if (ogre != null && ogre.isAlive() &&
             ogre.overlaps(player.getX(), player.getY(),
                 player.getWidth(), player.getHeight())) {
-            player.takeDamage(25);
+            player.takeDamage((int)(25 * m));
         }
     }
 
     private void handleMageProjectileCollisions() {
-        for (DarkMage m : darkMages) {
-            for (float[] proj : m.getProjectiles()) {
+        float m = GameState.getInstance().getDifficultyMultiplier();
+        for (DarkMage dm : darkMages) {
+            for (float[] proj : dm.getProjectiles()) {
                 boolean hitsPlayer = proj[0] < player.getX() + player.getWidth() &&
                     proj[0] + 10 > player.getX() &&
                     proj[1] < player.getY() + player.getHeight() &&
                     proj[1] + 10 > player.getY();
                 if (hitsPlayer) {
-                    player.takeDamage(20);
+                    player.takeDamage((int)(20 * m));
                     proj[3] = 0;
                 }
             }

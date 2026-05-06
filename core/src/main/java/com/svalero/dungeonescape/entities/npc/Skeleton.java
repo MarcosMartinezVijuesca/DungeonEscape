@@ -15,6 +15,13 @@ public class Skeleton extends NPC {
         this.rightBound = rightBound;
     }
 
+    public Skeleton(float x, float y, float leftBound, float rightBound, float multiplier) {
+        super(x, y, 32, 48, (int)(60 * multiplier), 100);
+        this.leftBound = leftBound;
+        this.rightBound = rightBound;
+        this.speed = 80f * multiplier;
+    }
+
     @Override
     public void update(float delta, float playerX, float playerY) {
         if (!alive) return;

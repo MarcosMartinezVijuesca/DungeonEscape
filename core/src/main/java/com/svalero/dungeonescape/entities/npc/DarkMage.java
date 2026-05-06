@@ -8,7 +8,7 @@ import java.util.List;
 public class DarkMage extends NPC {
 
     private float shootTimer = 0f;
-    private static final float SHOOT_INTERVAL = 2.5f;
+    private float shootInterval = 2.5f; // ya no es static final
     private static final float DETECTION_RANGE = 300f;
 
     // Proyectiles del mago [x, y, velocityX, active(1=si, 0=no)]
@@ -21,6 +21,11 @@ public class DarkMage extends NPC {
         super(x, y, 32, 48, 80, 200);
     }
 
+    public DarkMage(float x, float y, float multiplier) {
+        super(x, y, 32, 48, (int)(80 * multiplier), 200);
+        this.shootInterval = 2.5f / multiplier; // más difícil = dispara más rápido
+    }
+
     @Override
     public void update(float delta, float playerX, float playerY) {
         if (!alive) return;
@@ -29,7 +34,7 @@ public class DarkMage extends NPC {
 
         // Detecta al jugador si está cerca y dispara
         float distX = Math.abs(playerX - x);
-        if (distX < DETECTION_RANGE && shootTimer >= SHOOT_INTERVAL) {
+        if (distX < DETECTION_RANGE && shootTimer >= shootInterval) {
             shootTimer = 0f;
             float direction = playerX > x ? PROJ_SPEED : -PROJ_SPEED;
             projectiles.add(new float[]{x + width / 2f, y + height / 2f, direction, 1f});

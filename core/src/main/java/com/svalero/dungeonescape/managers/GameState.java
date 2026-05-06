@@ -9,6 +9,7 @@ public class GameState {
     private int currentLevel;
     private boolean soundEnabled;
     private String playerName;
+    private String difficulty = "Normal";
 
     private GameState() {
         reset();
@@ -29,6 +30,14 @@ public class GameState {
         playerName = "";
     }
 
+    public float getDifficultyMultiplier() {
+        switch (difficulty) {
+            case "Facil":   return 0.7f;
+            case "Dificil": return 1.5f;
+            default:        return 1.0f; // Normal
+        }
+    }
+
 
 
     public int getScore() { return score; }
@@ -45,4 +54,8 @@ public class GameState {
 
     public String getPlayerName() { return playerName; }
     public void setPlayerName(String name) { this.playerName = name; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
 }
