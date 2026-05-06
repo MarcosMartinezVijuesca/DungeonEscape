@@ -24,7 +24,7 @@ public class Projectile {
         x += speed * delta;
 
         // Desactivar si sale de la pantalla
-        if (x > 900 || x < -50) {
+        if (x > 2500 || x < -50) {
             active = false;
         }
     }

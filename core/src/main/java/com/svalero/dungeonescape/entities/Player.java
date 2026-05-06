@@ -84,7 +84,7 @@ public class Player {
 
         // Límites horizontales
         if (x < 0) x = 0;
-        if (x + width > 800) x = 800 - width;
+        if (x + width > 2400) x = 2400 - width;
     }
 
     public boolean canShoot() {

@@ -24,6 +24,7 @@ public class GameScreen implements Screen {
     private final DungeonEscape game;
     private ShapeRenderer shapeRenderer;
     private OrthographicCamera camera;
+    private OrthographicCamera hudCamera;
     private HUD hud;
 
     // Entidades
@@ -50,6 +51,9 @@ public class GameScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
 
+        hudCamera = new OrthographicCamera();
+        hudCamera.setToOrtho(false, 800, 600);
+
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
 
@@ -67,22 +71,33 @@ public class GameScreen implements Screen {
         player = new Player(100, 50);
 
         platforms = new float[][]{
-            {0,   20,  800, 20},   // suelo principal
+            {0, 20, 2400, 20},   // suelo principal largo
             {100, 140, 150, 20},   // plataforma 1
             {320, 220, 150, 20},   // plataforma 2
             {550, 170, 150, 20},   // plataforma 3
-            {200, 320, 120, 20},   // plataforma 4
-            {450, 340, 130, 20},   // plataforma 5
+            {750, 250, 120, 20},   // plataforma 4
+            {950, 180, 150, 20},   // plataforma 5
+            {1150, 280, 130, 20},   // plataforma 6
+            {1350, 200, 150, 20},   // plataforma 7
+            {1550, 300, 120, 20},   // plataforma 8
+            {1750, 220, 150, 20},   // plataforma 9
+            {1950, 150, 130, 20},   // plataforma 10
+            {2100, 260, 150, 20},   // plataforma 11
         };
 
         skeletons = new ArrayList<>();
-        skeletons.add(new Skeleton(250, 40, 150, 400));
-        skeletons.add(new Skeleton(550, 40, 420, 700));
+        skeletons.add(new Skeleton(300, 40, 200, 500));
+        skeletons.add(new Skeleton(700, 40, 550, 900));
+        skeletons.add(new Skeleton(1200, 40, 1000, 1400));
+        skeletons.add(new Skeleton(1800, 40, 1600, 2000));
 
         darkMages = new ArrayList<>();
-        darkMages.add(new DarkMage(620, 40));
+        darkMages.add(new DarkMage(800, 40));
+        darkMages.add(new DarkMage(1500, 40));
+        darkMages.add(new DarkMage(2100, 40));
 
-        ogre = new Ogre(680, 40, 520, 760);
+        ogre = new Ogre(2200, 40, 2000, 2350);
+
     }
 
     @Override
@@ -107,8 +122,17 @@ public class GameScreen implements Screen {
         drawProjectiles();
         shapeRenderer.end();
 
-        // HUD
+        // Cámara sigue al jugador
+        camera.position.x = Math.max(400, Math.min(player.getX() + 16, 2400 - 400));
+        camera.position.y = 300;
+        camera.update();
+
+        // HUD con cámara fija
+        game.batch.setProjectionMatrix(hudCamera.combined);
         hud.render(game.batch, 600);
+
+        // Restaurar cámara del juego para el siguiente frame
+        game.batch.setProjectionMatrix(camera.combined);
 
         // Pausa con ESC
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
