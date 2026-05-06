@@ -10,12 +10,14 @@ public class Projectile {
     private float speed;
     private boolean active = true;
 
-    // Daño que hace al enemigo
+    private float startX; // posición inicial para calcular distancia
+    private static final float MAX_RANGE = 400f; // rango máximo del proyectil
     private static final int DAMAGE = 25;
 
     public Projectile(float x, float y, boolean goingRight) {
         this.x = x;
         this.y = y;
+        this.startX = x;
         this.speed = goingRight ? 400f : -400f;
     }
 
@@ -23,7 +25,12 @@ public class Projectile {
         if (!active) return;
         x += speed * delta;
 
-        // Desactivar si sale de la pantalla
+        // Desactivar si supera el rango máximo
+        if (Math.abs(x - startX) > MAX_RANGE) {
+            active = false;
+        }
+
+        // Desactivar si sale del mapa
         if (x > 2500 || x < -50) {
             active = false;
         }
@@ -39,7 +46,6 @@ public class Projectile {
     public void deactivate() { active = false; }
     public int getDamage() { return DAMAGE; }
 
-    // Colisión simple con rectangulo
     public boolean overlaps(float ox, float oy, float ow, float oh) {
         return active &&
             x < ox + ow &&
