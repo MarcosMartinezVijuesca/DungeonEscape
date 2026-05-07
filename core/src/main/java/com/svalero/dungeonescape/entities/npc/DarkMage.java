@@ -28,7 +28,10 @@ public class DarkMage extends NPC {
 
     @Override
     public void update(float delta, float playerX, float playerY) {
-        if (!alive) return;
+        if (!alive){
+            projectiles.clear();
+            return;
+        }
 
         shootTimer += delta;
 
