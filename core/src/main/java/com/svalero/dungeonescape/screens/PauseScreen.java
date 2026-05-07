@@ -21,6 +21,7 @@ public class PauseScreen implements Screen {
     private final GameScreen gameScreen;
     private Stage stage;
     private Skin skin;
+    private boolean initialized = false;
 
     public PauseScreen(DungeonEscape game, GameScreen gameScreen) {
         this.game = game;

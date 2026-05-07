@@ -38,11 +38,10 @@ public class Ogre extends NPC {
         }
 
         if (chasing) {
-            // Perseguir al jugador
             if (playerX > x) {
-                x += speed * 1.5f * delta;
+                x += speed * 1.2f * delta; // antes era 1.5f
             } else {
-                x -= speed * 1.5f * delta;
+                x -= speed * 1.2f * delta;
             }
         } else {
             // Patrulla normal

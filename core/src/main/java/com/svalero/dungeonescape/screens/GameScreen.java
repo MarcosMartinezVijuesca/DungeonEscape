@@ -38,6 +38,8 @@ public class GameScreen implements Screen {
     // Estado
     private GameState state;
     private boolean paused = false;
+    private boolean initialized = false;
+
 
     // Plataformas [x, y, width, height]
     private float[][] platforms;
@@ -46,6 +48,7 @@ public class GameScreen implements Screen {
     private int currentLevel = 1;
     private static final int MAP_WIDTH_L1 = 2400;
     private static final int MAP_WIDTH_L2 = 2400;
+    private static final int MAP_WIDTH_L3 = 1200;
 
     // Puerta de salida nivel 1 [x, y, width, height]
     private float[] exitDoor = {2330, 40, 40, 80};
@@ -57,6 +60,9 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
+        if (initialized) return;
+        initialized = true;
+
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
 
@@ -160,8 +166,33 @@ public class GameScreen implements Screen {
         darkMages.add(new DarkMage(1600, 40, m));
         darkMages.add(new DarkMage(2000, 40, m));
 
-        // Ogro reforzado como boss final — más vida y más rápido
-        ogre = new Ogre(2200, 40, 2000, 2350, m * 1.5f);
+    }
+
+    // ==================== NIVEL 3 ====================
+    private void setupLevel3() {
+        currentLevel = 3;
+        state.setCurrentLevel(3);
+        exitVisible = false;
+        projectiles.clear();
+
+        player.setPosition(100, 50);
+        player.revive();
+
+        // Sala del trono — plataformas simétricas para el boss fight
+        platforms = new float[][]{
+            {0,   20,  1200, 20},  // suelo
+            {100, 160, 100,  20},  // plataforma izquierda baja
+            {200, 280, 100,  20},  // plataforma izquierda alta
+            {550, 320, 100,  20},  // plataforma central alta
+            {900, 280, 100,  20},  // plataforma derecha alta
+            {1000,160, 100,  20},  // plataforma derecha baja
+        };
+
+        skeletons = new ArrayList<>();
+        darkMages = new ArrayList<>();
+
+        float m = state.getDifficultyMultiplier();
+        ogre = new Ogre(600, 40, 200, 1000, m * 1.8f);
     }
 
     // ==================== RENDER ====================
@@ -169,13 +200,16 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         // Color de fondo según nivel
         if (currentLevel == 1) {
-            Gdx.gl.glClearColor(0.08f, 0.08f, 0.12f, 1); // mazmorra oscura
+            Gdx.gl.glClearColor(0.08f, 0.08f, 0.12f, 1);
+        } else if (currentLevel == 2) {
+            Gdx.gl.glClearColor(0.15f, 0.12f, 0.05f, 1);
         } else {
-            Gdx.gl.glClearColor(0.15f, 0.12f, 0.05f, 1); // torres doradas
+            Gdx.gl.glClearColor(0.12f, 0.05f, 0.05f, 1); // rojo oscuro sala del trono
         }
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        int mapWidth = currentLevel == 1 ? MAP_WIDTH_L1 : MAP_WIDTH_L2;
+        int mapWidth = currentLevel == 1 ? MAP_WIDTH_L1 :
+            currentLevel == 2 ? MAP_WIDTH_L2 : MAP_WIDTH_L3;
         camera.position.x = Math.max(400, Math.min(player.getX() + 16, mapWidth - 400));
         camera.position.y = 300;
         camera.update();
@@ -249,11 +283,12 @@ public class GameScreen implements Screen {
     }
 
     private void checkExit() {
-        if (currentLevel == 1 && allEnemiesDeadLevel1()) {
-            exitVisible = true;
-        }
-        if (currentLevel == 2 && allEnemiesDeadLevel2()) {
-            exitVisible = true;
+       exitVisible = true;
+
+        // Nivel 3: victoria directa al morir el ogro
+        if (currentLevel == 3 && ogre != null && !ogre.isAlive()) {
+            SoundManager.getInstance().stopMusic();
+            game.setScreen(new WinScreen(game));
         }
     }
 
@@ -266,10 +301,19 @@ public class GameScreen implements Screen {
             player.getY() < exitDoor[1] + exitDoor[3];
 
         if (playerAtExit) {
+            // Bonus por matar todos los enemigos antes de pasar
+            if (allEnemiesDeadLevel1() && currentLevel == 1) {
+                state.addScore(500);
+            }
+            if (allEnemiesDeadLevel2() && currentLevel == 2) {
+                state.addScore(1000);
+            }
+
             if (currentLevel == 1) {
                 setupLevel2();
+            } else if (currentLevel == 2) {
+                setupLevel3();
             } else {
-                // Victoria!
                 SoundManager.getInstance().stopMusic();
                 game.setScreen(new WinScreen(game));
             }
@@ -401,11 +445,12 @@ public class GameScreen implements Screen {
 
     // ==================== DIBUJO ====================
     private void drawPlatforms() {
-        // Color diferente según nivel
         if (currentLevel == 1) {
             shapeRenderer.setColor(0.3f, 0.2f, 0.1f, 1); // marrón mazmorra
-        } else {
+        } else if (currentLevel == 2) {
             shapeRenderer.setColor(0.5f, 0.4f, 0.2f, 1); // dorado torres
+        } else {
+            shapeRenderer.setColor(0.4f, 0.1f, 0.1f, 1); // rojo sala del trono
         }
         for (float[] plat : platforms) {
             shapeRenderer.rect(plat[0], plat[1], plat[2], plat[3]);
