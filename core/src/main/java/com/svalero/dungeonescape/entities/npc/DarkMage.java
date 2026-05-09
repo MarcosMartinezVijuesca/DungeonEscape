@@ -1,83 +1,171 @@
 package com.svalero.dungeonescape.entities.npc;
 
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.svalero.dungeonescape.entities.EnemyProjectile;
+import com.svalero.dungeonescape.managers.GameState;
+import com.svalero.dungeonescape.utils.AnimationHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DarkMage extends NPC {
 
     private float shootTimer = 0f;
-    private float shootInterval = 2.5f; // ya no es static final
+    private float shootInterval = 2.5f;
     private static final float DETECTION_RANGE = 300f;
 
-    // Proyectiles del mago [x, y, velocityX, active(1=si, 0=no)]
-    private List<float[]> projectiles = new ArrayList<>();
+    // Proyectiles [x, y, velocityX, active]
+    private boolean facingRight = true;
+
+    private List<EnemyProjectile> projectiles = new ArrayList<>();
     private static final float PROJ_SPEED = 150f;
     private static final float PROJ_WIDTH = 10f;
     private static final float PROJ_HEIGHT = 10f;
 
+    // Animaciones
+    private Animation<TextureRegion> idleAnim;
+    private Animation<TextureRegion> runAnim;
+    private Animation<TextureRegion> attackAnim;
+    private Animation<TextureRegion> hurtAnim;
+    private Animation<TextureRegion> deathAnim;
+    private float stateTime = 0f;
+
+    // Estado
+    private boolean dying = false;
+    private float dyingTimer = 0f;
+    private boolean hurting = false;
+    private float hurtTimer = 0f;
+    private static final float HURT_DURATION = 0.3f;
+    private boolean attacking = false;
+    private float attackTimer = 0f;
+    private static final float ATTACK_DURATION = 0.6f;
+
+    // Tamaño visual
+    private float drawWidth = 250f;
+    private float drawHeight = 350f;
+
     public DarkMage(float x, float y) {
-        super(x, y, 32, 48, 80, 200);
+        super(x, y, 60, 150, 80, 200);
+        loadAnimations();
     }
 
     public DarkMage(float x, float y, float multiplier) {
-        super(x, y, 32, 48, (int)(80 * multiplier), 200);
-        this.shootInterval = 2.5f / multiplier; // más difícil = dispara más rápido
+        super(x, y, 60, 150, (int)(80 * multiplier), 200);
+        this.shootInterval = 2.5f / multiplier;
+        loadAnimations();
+    }
+
+    private void loadAnimations() {
+        idleAnim   = AnimationHelper.loadAnimation("sprites/darkmage/Idle.png",     8, 0.1f);
+        runAnim    = AnimationHelper.loadAnimation("sprites/darkmage/Run.png",      8, 0.08f);
+        attackAnim = AnimationHelper.loadAnimation("sprites/darkmage/Attack1.png",  8, 0.07f);
+        hurtAnim   = AnimationHelper.loadAnimation("sprites/darkmage/Take hit.png", 3, 0.1f);
+        deathAnim  = AnimationHelper.loadAnimation("sprites/darkmage/Death.png",    7, 0.1f);
+
+        idleAnim.setPlayMode(Animation.PlayMode.LOOP);
+        runAnim.setPlayMode(Animation.PlayMode.LOOP);
+        attackAnim.setPlayMode(Animation.PlayMode.NORMAL);
+        hurtAnim.setPlayMode(Animation.PlayMode.NORMAL);
+        deathAnim.setPlayMode(Animation.PlayMode.NORMAL);
     }
 
     @Override
     public void update(float delta, float playerX, float playerY) {
-        if (!alive){
-            projectiles.clear();
+        stateTime += delta;
+
+        if (dying) {
+            dyingTimer += delta;
             return;
+        }
+
+        if (hurting) {
+            hurtTimer += delta;
+            if (hurtTimer >= HURT_DURATION) {
+                hurting = false;
+                hurtTimer = 0f;
+            }
+        }
+
+        if (!alive) return;
+
+        if (attacking) {
+            attackTimer += delta;
+            if (attackTimer >= ATTACK_DURATION) {
+                attacking = false;
+                attackTimer = 0f;
+            }
         }
 
         shootTimer += delta;
 
-        // Detecta al jugador si está cerca y dispara
         float distX = Math.abs(playerX - x);
-        if (distX < DETECTION_RANGE && shootTimer >= shootInterval) {
+        float distY = Math.abs(playerY - y);
+        if (distX < DETECTION_RANGE && distY < 80f && shootTimer >= shootInterval) {
+            facingRight = playerX > x;
             shootTimer = 0f;
-            float direction = playerX > x ? PROJ_SPEED : -PROJ_SPEED;
-            projectiles.add(new float[]{x + width / 2f, y + height / 2f, direction, 1f});
+            attacking = true;
+            attackTimer = 0f;
+            boolean goingRight = playerX > x;
+            projectiles.add(new EnemyProjectile(x + width / 2f, y + 30f, goingRight));
         }
 
-        // Mover proyectiles y eliminar los inactivos o fuera de pantalla
-        List<float[]> toRemove = new ArrayList<>();
-        for (float[] proj : projectiles) {
-            if (proj[3] == 0) {
-                toRemove.add(proj);
-                continue;
-            }
-            proj[0] += proj[2] * delta;
-            if (proj[0] > 2500 || proj[0] < -50) toRemove.add(proj);
+// Mover proyectiles
+        List<EnemyProjectile> toRemove = new ArrayList<>();
+        for (EnemyProjectile proj : projectiles) {
+            proj.update(delta);
+            if (!proj.isActive()) toRemove.add(proj);
         }
         projectiles.removeAll(toRemove);
     }
 
     @Override
-    public void render(ShapeRenderer shapeRenderer) {
+    public void takeDamage(int damage) {
         if (!alive) return;
-
-        // Cuerpo del mago
-        shapeRenderer.setColor(Color.PURPLE);
-        shapeRenderer.rect(x, y, width, height);
-
-        // Barra de vida
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect(x, y + height + 4, width, 4);
-        shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.rect(x, y + height + 4, width * ((float) health / maxHealth), 4);
-
-        // Proyectiles activos
-        shapeRenderer.setColor(Color.MAGENTA);
-        for (float[] proj : projectiles) {
-            if (proj[3] == 1f) {
-                shapeRenderer.rect(proj[0], proj[1], PROJ_WIDTH, PROJ_HEIGHT);
-            }
+        health -= damage;
+        hurting = true;
+        hurtTimer = 0f;
+        if (health <= 0) {
+            health = 0;
+            alive = false;
+            dying = true;
+            dyingTimer = 0f;
+            projectiles.clear();
         }
     }
 
-    public List<float[]> getProjectiles() { return projectiles; }
+    public void render(SpriteBatch batch) {
+        if (dying) {
+            TextureRegion frame = deathAnim.getKeyFrame(dyingTimer);
+            batch.draw(frame, x + drawWidth - 30, y - 120, -drawWidth, drawHeight);
+            return;
+        }
+
+        if (!alive) return;
+
+        TextureRegion frame;
+
+        if (hurting) {
+            frame = hurtAnim.getKeyFrame(hurtTimer);
+        } else if (attacking) {
+            frame = attackAnim.getKeyFrame(attackTimer);
+        } else {
+            frame = idleAnim.getKeyFrame(stateTime);
+        }
+
+        if (facingRight) {
+            batch.draw(frame, x - 30, y - 120, drawWidth, drawHeight);
+        } else {
+            batch.draw(frame, x + drawWidth - 30, y - 120, -drawWidth, drawHeight);
+        }
+    }
+
+    public void renderProjectiles(SpriteBatch batch) {
+        // Los proyectiles los dibuja GameScreen con ShapeRenderer
+    }
+
+    public boolean isDying() { return dying; }
+    public List<EnemyProjectile> getProjectiles() { return projectiles; }
 }
