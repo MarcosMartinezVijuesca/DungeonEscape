@@ -3,30 +3,23 @@ package com.svalero.dungeonescape.entities;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.svalero.dungeonescape.utils.AnimationHelper;
 
-public class Projectile {
+public class EnemyProjectile {
 
     public float x, y;
-    public float width = 32, height = 20;
     private float speed;
     private boolean active = true;
-    private float startX;
-    private static final float MAX_RANGE = 400f;
-    private static final int DAMAGE = 25;
-
-    // Animación
-    private Animation<TextureRegion> fireAnim;
     private float stateTime = 0f;
     private boolean goingRight;
 
-    public Projectile(float x, float y, boolean goingRight) {
+    private Animation<TextureRegion> fireAnim;
+
+    public EnemyProjectile(float x, float y, boolean goingRight) {
         this.x = x;
         this.y = y;
-        this.startX = x;
         this.goingRight = goingRight;
-        this.speed = goingRight ? 400f : -400f;
+        this.speed = goingRight ? 150f : -150f;
         loadAnimation();
     }
 
@@ -46,36 +39,34 @@ public class Projectile {
         if (!active) return;
         stateTime += delta;
         x += speed * delta;
-
-        if (Math.abs(x - startX) > MAX_RANGE) active = false;
         if (x > 2500 || x < -50) active = false;
     }
 
     public void render(SpriteBatch batch) {
         if (!active) return;
-
         TextureRegion frame = fireAnim.getKeyFrame(stateTime);
 
-        if (goingRight) {
-            batch.draw(frame, x, y, 48, 30);
-        } else {
-            // Voltear horizontalmente
-            batch.draw(frame, x + 48, y, -48, 30);
-        }
-    }
+        // Teñir de azul/morado para distinguirlo del jugador
+        batch.setColor(0.5f, 0f, 1f, 1f);
 
-    // Mantener para compatibilidad
-    public void render(ShapeRenderer shapeRenderer) {}
+        if (goingRight) {
+            batch.draw(frame, x, y, 36, 22);
+        } else {
+            batch.draw(frame, x + 36, y, -36, 22);
+        }
+
+        // Restaurar color blanco para no afectar otros sprites
+        batch.setColor(1f, 1f, 1f, 1f);
+    }
 
     public boolean isActive() { return active; }
     public void deactivate() { active = false; }
-    public int getDamage() { return DAMAGE; }
 
     public boolean overlaps(float ox, float oy, float ow, float oh) {
         return active &&
             x < ox + ow &&
-            x + width > ox &&
+            x + 36 > ox &&
             y < oy + oh &&
-            y + height > oy;
+            y + 22 > oy;
     }
 }

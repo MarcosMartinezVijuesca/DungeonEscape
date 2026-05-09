@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.svalero.dungeonescape.DungeonEscape;
+import com.svalero.dungeonescape.entities.EnemyProjectile;
 import com.svalero.dungeonescape.entities.Player;
 import com.svalero.dungeonescape.entities.Projectile;
 import com.svalero.dungeonescape.entities.npc.DarkMage;
@@ -120,7 +121,8 @@ public class GameScreen implements Screen {
         darkMages.add(new DarkMage(1500, 40, m));
         darkMages.add(new DarkMage(2100, 40, m));
 
-        ogre = null; // no hay ogro en nivel 1
+        // Ogro temporal para pruebas — QUITAR ANTES DE ENTREGAR
+        ogre = null;
     }
 
     // ==================== NIVEL 2 ====================
@@ -166,6 +168,8 @@ public class GameScreen implements Screen {
         darkMages.add(new DarkMage(1600, 40, m));
         darkMages.add(new DarkMage(2000, 40, m));
 
+        ogre = null;
+
     }
 
     // ==================== NIVEL 3 ====================
@@ -204,7 +208,7 @@ public class GameScreen implements Screen {
         } else if (currentLevel == 2) {
             Gdx.gl.glClearColor(0.15f, 0.12f, 0.05f, 1);
         } else {
-            Gdx.gl.glClearColor(0.12f, 0.05f, 0.05f, 1); // rojo oscuro sala del trono
+            Gdx.gl.glClearColor(0.12f, 0.05f, 0.05f, 1);
         }
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -222,13 +226,31 @@ public class GameScreen implements Screen {
         }
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
         drawPlatforms();
         drawExit();
-        player.render(shapeRenderer);
-        drawNPCs();
-        drawProjectiles();
         shapeRenderer.end();
 
+        // SpriteBatch para jugador y NPCs con cámara del juego
+        game.batch.setProjectionMatrix(camera.combined);
+        game.batch.begin();
+        player.render(game.batch);
+        for (Projectile p : projectiles) p.render(game.batch); // ← añadir aquí
+        for (Skeleton s : skeletons) {
+            if (s.isAlive() || s.isDying()) s.render(game.batch);
+        }
+        for (DarkMage m : darkMages) {
+            if (m.isAlive() || m.isDying()) m.render(game.batch);
+            for (EnemyProjectile proj : m.getProjectiles()) {
+                proj.render(game.batch);
+            }
+        }
+        if (ogre != null && (ogre.isAlive() || ogre.isDying())) {
+            ogre.render(game.batch);
+        }
+        game.batch.end();
+
+        // HUD con cámara fija
         game.batch.setProjectionMatrix(hudCamera.combined);
         hud.render(game.batch, 600);
         game.batch.setProjectionMatrix(camera.combined);
@@ -247,7 +269,7 @@ public class GameScreen implements Screen {
             float projX = player.isFacingRight()
                 ? player.getX() + player.getWidth()
                 : player.getX() - 12;
-            float projY = player.getY() + player.getHeight() / 2f;
+            float projY = player.getY() + player.getHeight() - 10f;
             projectiles.add(new Projectile(projX, projY, player.isFacingRight()));
             player.shoot();
         }
@@ -255,7 +277,11 @@ public class GameScreen implements Screen {
         for (Projectile p : projectiles) p.update(delta);
         projectiles.removeIf(p -> !p.isActive());
 
-        for (Skeleton s : skeletons) s.update(delta, player.getX(), player.getY());
+        for (Skeleton s : skeletons) {
+            if (s.isAlive() || s.isDying()) {
+                s.update(delta, player.getX(), player.getY());
+            }
+        }
         for (DarkMage m : darkMages) m.update(delta, player.getX(), player.getY());
         if (ogre != null) ogre.update(delta, player.getX(), player.getY());
 
@@ -360,21 +386,21 @@ public class GameScreen implements Screen {
     private void handleProjectileNPCCollisions() {
         for (Projectile proj : projectiles) {
             for (Skeleton s : skeletons) {
-                if (s.isAlive() && proj.overlaps(s.getX(), s.getY(), s.getWidth(), s.getHeight())) {
+                if (s.isAlive() && proj.overlaps(s.getX(), s.getY() + 20, s.getWidth(), s.getHeight())) {
                     s.takeDamage(proj.getDamage());
                     proj.deactivate();
                     if (!s.isAlive()) state.addScore(s.getScoreValue());
                 }
             }
             for (DarkMage m : darkMages) {
-                if (m.isAlive() && proj.overlaps(m.getX(), m.getY(), m.getWidth(), m.getHeight())) {
+                if (m.isAlive() && proj.overlaps(m.getX() + 60, m.getY() - 20, 60, 150)) {
                     m.takeDamage(proj.getDamage());
                     proj.deactivate();
                     if (!m.isAlive()) state.addScore(m.getScoreValue());
                 }
             }
             if (ogre != null && ogre.isAlive() &&
-                proj.overlaps(ogre.getX(), ogre.getY(), ogre.getWidth(), ogre.getHeight())) {
+                proj.overlaps(ogre.getX(), ogre.getY() + 20, ogre.getWidth(), ogre.getHeight())) {
                 ogre.takeDamage(proj.getDamage());
                 proj.deactivate();
                 if (!ogre.isAlive()) state.addScore(ogre.getScoreValue());
@@ -408,15 +434,11 @@ public class GameScreen implements Screen {
     private void handleMageProjectileCollisions() {
         float m = state.getDifficultyMultiplier();
         for (DarkMage dm : darkMages) {
-            if (!dm.isAlive()) continue; // ← ignorar proyectiles de magos muertos
-            for (float[] proj : dm.getProjectiles()) {
-                boolean hitsPlayer = proj[0] < player.getX() + player.getWidth() &&
-                    proj[0] + 10 > player.getX() &&
-                    proj[1] < player.getY() + player.getHeight() &&
-                    proj[1] + 10 > player.getY();
-                if (hitsPlayer) {
+            for (EnemyProjectile proj : dm.getProjectiles()) {
+                if (proj.overlaps(player.getX(), player.getY(),
+                    player.getWidth(), player.getHeight())) {
                     player.takeDamage((int)(20 * m));
-                    proj[3] = 0;
+                    proj.deactivate();
                 }
             }
         }
@@ -458,13 +480,11 @@ public class GameScreen implements Screen {
     }
 
     private void drawNPCs() {
-        for (Skeleton s : skeletons) s.render(shapeRenderer);
-        for (DarkMage m : darkMages) m.render(shapeRenderer);
-        if (ogre != null) ogre.render(shapeRenderer);
-    }
-
-    private void drawProjectiles() {
-        for (Projectile p : projectiles) p.render(shapeRenderer);
+        game.batch.begin();
+        for (Skeleton s : skeletons) s.render(game.batch);
+        for (DarkMage m : darkMages) m.render(game.batch);
+        if (ogre != null) ogre.render(game.batch);
+        game.batch.end();
     }
 
     public void resumeGame() {

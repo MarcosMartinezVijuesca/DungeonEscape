@@ -22,7 +22,7 @@ public abstract class NPC {
     }
 
     public abstract void update(float delta, float playerX, float playerY);
-    public abstract void render(ShapeRenderer shapeRenderer);
+    public void render(ShapeRenderer shapeRenderer) {}
 
     public void takeDamage(int damage) {
         if (!alive) return;
