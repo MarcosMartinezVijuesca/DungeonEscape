@@ -178,13 +178,15 @@ public class Player {
         SoundManager.getInstance().playShoot();
     }
 
-    public void takeDamage(int damage) {
+    public void takeDamage(int damage, boolean isSkeletonAttack) {
         if (invincibleTimer > 0) return;
         health -= damage;
         float invTime = 1.5f / GameState.getInstance().getDifficultyMultiplier();
         invincibleTimer = invTime;
-        SoundManager.getInstance().playHit();
-
+        SoundManager.getInstance().playPlayerGrunt();
+        if (isSkeletonAttack) {
+            SoundManager.getInstance().playHit();
+        }
         if (health <= 0) {
             health = 0;
             alive = false;
@@ -193,6 +195,8 @@ public class Player {
             GameState.getInstance().loseLife();
         }
     }
+
+
 
     public void revive() {
         health = 100;
