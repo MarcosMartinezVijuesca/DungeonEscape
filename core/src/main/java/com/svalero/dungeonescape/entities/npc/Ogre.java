@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.svalero.dungeonescape.managers.SoundManager;
 import com.svalero.dungeonescape.utils.AnimationHelper;
 
 public class Ogre extends NPC {
@@ -32,7 +33,7 @@ public class Ogre extends NPC {
     private float attackTimer = 0f;
     private static final float ATTACK_DURATION = 0.7f;
     private float attackCooldown = 0f;
-    private static final float ATTACK_RANGE = 60f;
+    private static final float ATTACK_RANGE = 120f;
 
     // Tamaño visual — grande para el boss
     private static final float DRAW_WIDTH = 200f;
@@ -150,11 +151,13 @@ public class Ogre extends NPC {
         health -= damage;
         hurting = true;
         hurtTimer = 0f;
+        SoundManager.getInstance().playOrcHit();
         if (health <= 0) {
             health = 0;
             alive = false;
             dying = true;
             dyingTimer = 0f;
+            SoundManager.getInstance().playOrcDeath();
         }
     }
 

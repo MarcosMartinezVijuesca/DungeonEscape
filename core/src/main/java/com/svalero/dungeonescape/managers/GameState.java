@@ -25,7 +25,7 @@ public class GameState {
 
     public void reset() {
         score = 0;
-        lives = 1;
+        lives = 3;
         currentLevel = 1;
         playerName = "";
     }

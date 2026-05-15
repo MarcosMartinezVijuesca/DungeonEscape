@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.svalero.dungeonescape.entities.EnemyProjectile;
 import com.svalero.dungeonescape.managers.GameState;
+import com.svalero.dungeonescape.managers.SoundManager;
 import com.svalero.dungeonescape.utils.AnimationHelper;
 
 import java.util.ArrayList;
@@ -127,12 +128,14 @@ public class DarkMage extends NPC {
         health -= damage;
         hurting = true;
         hurtTimer = 0f;
+        SoundManager.getInstance().playMageHit();
         if (health <= 0) {
             health = 0;
             alive = false;
             dying = true;
             dyingTimer = 0f;
             projectiles.clear();
+            SoundManager.getInstance().playMageDeath();
         }
     }
 

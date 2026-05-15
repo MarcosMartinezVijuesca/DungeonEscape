@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.svalero.dungeonescape.managers.GameState;
+import com.svalero.dungeonescape.managers.SoundManager;
 import com.svalero.dungeonescape.utils.AnimationHelper;
 
 public class Skeleton extends NPC {
@@ -160,11 +161,13 @@ public class Skeleton extends NPC {
         health -= damage;
         hurting = true;
         hurtTimer = 0f;
+        SoundManager.getInstance().playSkeletonHit();
         if (health <= 0) {
             health = 0;
             alive = false;
             dying = true;
             dyingTimer = 0f;
+            SoundManager.getInstance().playSkeletonDeath();
         }
     }
 }

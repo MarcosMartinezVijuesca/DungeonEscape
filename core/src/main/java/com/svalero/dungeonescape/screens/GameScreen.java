@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.svalero.dungeonescape.DungeonEscape;
 import com.svalero.dungeonescape.entities.EnemyProjectile;
@@ -44,6 +45,8 @@ public class GameScreen implements Screen {
 
     // Plataformas [x, y, width, height]
     private float[][] platforms;
+    private Texture[] wallTiles; // [0]=wall1 ... [8]=wall9
+    private static final int TILE = 16;
 
     // Nivel actual
     private int currentLevel = 1;
@@ -81,6 +84,11 @@ public class GameScreen implements Screen {
         SoundManager.getInstance().load();
         SoundManager.getInstance().playMusic();
 
+        wallTiles = new Texture[9];
+        for (int i = 0; i < 9; i++) {
+            wallTiles[i] = new Texture(Gdx.files.internal("sprites/environment/tiles/wall" + (i + 1) + ".png"));
+        }
+
         setupLevel1();
     }
 
@@ -94,35 +102,35 @@ public class GameScreen implements Screen {
         player = new Player(100, 50);
 
         platforms = new float[][]{
-            {0,    20,  2400, 20},
-            {100,  140, 150,  20},
-            {320,  220, 150,  20},
-            {550,  170, 150,  20},
-            {750,  250, 120,  20},
-            {950,  180, 150,  20},
-            {1150, 280, 130,  20},
-            {1350, 200, 150,  20},
-            {1550, 300, 120,  20},
-            {1750, 220, 150,  20},
-            {1950, 150, 130,  20},
-            {2100, 260, 150,  20},
+            {0, 20, 2400, 20},
+            {100, 140, 150, 20},
+            {320, 220, 150, 20},
+            {550, 170, 150, 20},
+            {750, 250, 120, 20},
+            {950, 180, 150, 20},
+            {1150, 280, 130, 20},
+            {1350, 200, 150, 20},
+            {1550, 300, 120, 20},
+            {1750, 220, 150, 20},
+            {1950, 150, 130, 20},
+            {2100, 260, 150, 20},
         };
 
         float m = state.getDifficultyMultiplier();
 
         skeletons = new ArrayList<>();
-        skeletons.add(new Skeleton(300,  40, 200,  500,  m));
-        skeletons.add(new Skeleton(700,  40, 550,  900,  m));
+        skeletons.add(new Skeleton(300, 40, 200, 500, m));
+        skeletons.add(new Skeleton(700, 40, 550, 900, m));
         skeletons.add(new Skeleton(1200, 40, 1000, 1400, m));
         skeletons.add(new Skeleton(1800, 40, 1600, 2000, m));
 
         darkMages = new ArrayList<>();
-        darkMages.add(new DarkMage(800,  40, m));
+        darkMages.add(new DarkMage(800, 40, m));
         darkMages.add(new DarkMage(1500, 40, m));
         darkMages.add(new DarkMage(2100, 40, m));
 
         // Ogro temporal para pruebas — QUITAR ANTES DE ENTREGAR
-        ogre = null;
+        ogre = new Ogre(600, 40, 200, 1000, m * 1.8f);
     }
 
     // ==================== NIVEL 2 ====================
@@ -137,34 +145,34 @@ public class GameScreen implements Screen {
 
         // Torres del castillo — más plataformas elevadas
         platforms = new float[][]{
-            {0,    20,  2400, 20},   // suelo
-            {50,   160, 120,  20},   // plataforma 1
-            {250,  260, 100,  20},   // plataforma 2
-            {420,  180, 130,  20},   // plataforma 3
-            {600,  300, 110,  20},   // plataforma 4
-            {780,  200, 140,  20},   // plataforma 5
-            {980,  320, 120,  20},   // plataforma 6
-            {1150, 240, 130,  20},   // plataforma 7
-            {1350, 350, 100,  20},   // plataforma 8
-            {1520, 260, 140,  20},   // plataforma 9
-            {1700, 180, 120,  20},   // plataforma 10
-            {1900, 300, 130,  20},   // plataforma 11
-            {2100, 220, 150,  20},   // plataforma 12
+            {0, 20, 2400, 20},   // suelo
+            {50, 160, 120, 20},   // plataforma 1
+            {250, 260, 100, 20},   // plataforma 2
+            {420, 180, 130, 20},   // plataforma 3
+            {600, 300, 110, 20},   // plataforma 4
+            {780, 200, 140, 20},   // plataforma 5
+            {980, 320, 120, 20},   // plataforma 6
+            {1150, 240, 130, 20},   // plataforma 7
+            {1350, 350, 100, 20},   // plataforma 8
+            {1520, 260, 140, 20},   // plataforma 9
+            {1700, 180, 120, 20},   // plataforma 10
+            {1900, 300, 130, 20},   // plataforma 11
+            {2100, 220, 150, 20},   // plataforma 12
         };
 
         float m = state.getDifficultyMultiplier();
 
         // Más enemigos en nivel 2
         skeletons = new ArrayList<>();
-        skeletons.add(new Skeleton(250,  40, 150,  500,  m));
-        skeletons.add(new Skeleton(600,  40, 450,  850,  m));
-        skeletons.add(new Skeleton(1000, 40, 800,  1200, m));
+        skeletons.add(new Skeleton(250, 40, 150, 500, m));
+        skeletons.add(new Skeleton(600, 40, 450, 850, m));
+        skeletons.add(new Skeleton(1000, 40, 800, 1200, m));
         skeletons.add(new Skeleton(1400, 40, 1200, 1600, m));
         skeletons.add(new Skeleton(1900, 40, 1700, 2100, m));
 
         darkMages = new ArrayList<>();
-        darkMages.add(new DarkMage(400,  40, m));
-        darkMages.add(new DarkMage(900,  40, m));
+        darkMages.add(new DarkMage(400, 40, m));
+        darkMages.add(new DarkMage(900, 40, m));
         darkMages.add(new DarkMage(1600, 40, m));
         darkMages.add(new DarkMage(2000, 40, m));
 
@@ -184,12 +192,12 @@ public class GameScreen implements Screen {
 
         // Sala del trono — plataformas simétricas para el boss fight
         platforms = new float[][]{
-            {0,   20,  1200, 20},  // suelo
-            {100, 160, 100,  20},  // plataforma izquierda baja
-            {200, 280, 100,  20},  // plataforma izquierda alta
-            {550, 320, 100,  20},  // plataforma central alta
-            {900, 280, 100,  20},  // plataforma derecha alta
-            {1000,160, 100,  20},  // plataforma derecha baja
+            {0, 20, 1200, 20},  // suelo
+            {100, 160, 100, 20},  // plataforma izquierda baja
+            {200, 280, 100, 20},  // plataforma izquierda alta
+            {550, 320, 100, 20},  // plataforma central alta
+            {900, 280, 100, 20},  // plataforma derecha alta
+            {1000, 160, 100, 20},  // plataforma derecha baja
         };
 
         skeletons = new ArrayList<>();
@@ -226,10 +234,10 @@ public class GameScreen implements Screen {
         }
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
-        drawPlatforms();
         drawExit();
         shapeRenderer.end();
+        game.batch.setProjectionMatrix(camera.combined);
+        drawPlatforms();
 
         // SpriteBatch para jugador y NPCs con cámara del juego
         game.batch.setProjectionMatrix(camera.combined);
@@ -309,7 +317,7 @@ public class GameScreen implements Screen {
     }
 
     private void checkExit() {
-       exitVisible = true;
+        exitVisible = true;
 
         // Nivel 3: victoria directa al morir el ogro
         if (currentLevel == 3 && ogre != null && !ogre.isAlive()) {
@@ -415,19 +423,13 @@ public class GameScreen implements Screen {
         for (Skeleton s : skeletons) {
             if (s.isAlive() && s.overlaps(player.getX(), player.getY(),
                 player.getWidth(), player.getHeight())) {
-                player.takeDamage((int)(10 * m));
-            }
-        }
-        for (DarkMage dm : darkMages) {
-            if (dm.isAlive() && dm.overlaps(player.getX(), player.getY(),
-                player.getWidth(), player.getHeight())) {
-                player.takeDamage((int)(15 * m));
+                player.takeDamage((int) (10 * m), true);
             }
         }
         if (ogre != null && ogre.isAlive() &&
-            ogre.overlaps(player.getX(), player.getY(),
-                player.getWidth(), player.getHeight())) {
-            player.takeDamage((int)(25 * m));
+            ogre.overlaps(player.getX() - 80, player.getY(),
+                player.getWidth() + 150, player.getHeight())) {
+            player.takeDamage((int)(25 * m), false);
         }
     }
 
@@ -437,7 +439,7 @@ public class GameScreen implements Screen {
             for (EnemyProjectile proj : dm.getProjectiles()) {
                 if (proj.overlaps(player.getX(), player.getY(),
                     player.getWidth(), player.getHeight())) {
-                    player.takeDamage((int)(20 * m));
+                    player.takeDamage((int)(20 * m), false);
                     proj.deactivate();
                 }
             }
@@ -467,16 +469,42 @@ public class GameScreen implements Screen {
 
     // ==================== DIBUJO ====================
     private void drawPlatforms() {
-        if (currentLevel == 1) {
-            shapeRenderer.setColor(0.3f, 0.2f, 0.1f, 1); // marrón mazmorra
-        } else if (currentLevel == 2) {
-            shapeRenderer.setColor(0.5f, 0.4f, 0.2f, 1); // dorado torres
-        } else {
-            shapeRenderer.setColor(0.4f, 0.1f, 0.1f, 1); // rojo sala del trono
-        }
+        game.batch.begin();
         for (float[] plat : platforms) {
-            shapeRenderer.rect(plat[0], plat[1], plat[2], plat[3]);
+            drawPlatformTiled(plat[0], plat[1], plat[2], plat[3]);
         }
+        game.batch.end();
+    }
+
+    private void drawPlatformTiled(float px, float py, float pw, float ph) {
+        int cols = Math.max(1, Math.round(pw / TILE));
+        int rows = Math.max(1, Math.round(ph / TILE));
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int tileIndex = getTileIndex(col, row, cols, rows);
+                float drawX = px + col * TILE;
+                float drawY = py + row * TILE;
+                game.batch.draw(wallTiles[tileIndex], drawX, drawY, TILE, TILE);
+            }
+        }
+    }
+
+    private int getTileIndex(int col, int row, int cols, int rows) {
+        boolean isTop = (row == rows - 1);
+        boolean isBottom = (row == 0);
+        boolean isLeft = (col == 0);
+        boolean isRight = (col == cols - 1);
+
+        if (isTop && isLeft) return 0; // wall1
+        if (isTop && isRight) return 2; // wall3
+        if (isTop) return 1; // wall2
+        if (isBottom && isLeft) return 6; // wall7
+        if (isBottom && isRight) return 8; // wall9
+        if (isBottom) return 7; // wall8
+        if (isLeft) return 3; // wall4
+        if (isRight) return 5; // wall6
+        return 4;                          // wall5 (centro)
     }
 
     private void drawNPCs() {
@@ -498,14 +526,25 @@ public class GameScreen implements Screen {
         hudCamera.setToOrtho(false, 800, 600);
     }
 
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
+
+    @Override
+    public void hide() {
+    }
 
     @Override
     public void dispose() {
         shapeRenderer.dispose();
         hud.dispose();
         SoundManager.getInstance().dispose();
+        if (wallTiles != null) {
+            for (Texture t : wallTiles) if (t != null) t.dispose();
+        }
     }
 }
