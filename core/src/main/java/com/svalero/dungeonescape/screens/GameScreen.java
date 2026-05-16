@@ -129,8 +129,7 @@ public class GameScreen implements Screen {
         darkMages.add(new DarkMage(1500, 40, m));
         darkMages.add(new DarkMage(2100, 40, m));
 
-        // Ogro temporal para pruebas — QUITAR ANTES DE ENTREGAR
-        ogre = new Ogre(600, 40, 200, 1000, m * 1.8f);
+        ogre = null;
     }
 
     // ==================== NIVEL 2 ====================
