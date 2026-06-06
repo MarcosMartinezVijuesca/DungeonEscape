@@ -39,20 +39,17 @@ DungeonEscape es un plataformero en el que el jugador controla a un mago que deb
 - Sistema de vidas con invencibilidad temporal tras recibir daño
 
 ## Ejecutar el juego
+1. Clona o descarga el repositorio
+2. Abre el proyecto en IntelliJ IDEA
+3. Espera a que Gradle sincronice las dependencias
+4. Ejecuta el juego desde el panel de Gradle:
+   - `lwjgl3` → `Tasks` → `application` → `run`
+   - O desde la terminal: `./gradlew lwjgl3:run`
 
-Para ejecutar el juego necesitas tener Java instalado. Genera el JAR ejecutable con:
-
-```bash
-./gradlew lwjgl3:jar
-```
-
-El fichero `.jar` se genera en `lwjgl3/build/libs/`. Ejecútalo con:
-
-```bash
-java -jar DungeonEscape-1.0.0.jar
-```
-
-O simplemente haz doble clic en el fichero `.jar`.
+## Requisitos
+- Java 21 o superior
+- IntelliJ IDEA
+- Conexión a internet para descargar dependencias de Gradle
 
 ## Desarrollo
 
