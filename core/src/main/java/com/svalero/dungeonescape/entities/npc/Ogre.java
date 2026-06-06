@@ -112,14 +112,15 @@ public class Ogre extends NPC {
         float distX = Math.abs(playerX - x);
 
         // Detectar y perseguir
-        if (distX < detectionRange) {
+        float distY = Math.abs(playerY - y);
+        if (distX < detectionRange && distY < 100f) {
             chasing = true;
         } else {
             chasing = false;
         }
 
         // Atacar si está cerca
-        if (distX < ATTACK_RANGE && attackCooldown <= 0) {
+        if (distX < ATTACK_RANGE && distY < 50f && attackCooldown <= 0) {
             attacking = true;
             attackTimer = 0f;
             attackCooldown = 1.5f;
