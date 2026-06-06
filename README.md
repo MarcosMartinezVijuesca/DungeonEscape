@@ -1,33 +1,74 @@
 # DungeonEscape
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+Videojuego 2D de plataformas con temática medieval desarrollado con [libGDX](https://libgdx.com/) como proyecto final para el módulo de Programación Multimedia y Dispositivos Móviles (DAM - Centro San Valero, Zaragoza).
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+## Descripción
 
-## Platforms
+DungeonEscape es un plataformero en el que el jugador controla a un mago que debe escapar de las mazmorras de un castillo oscuro. A lo largo de 3 niveles, el jugador se enfrentará a diferentes enemigos y deberá llegar a la puerta de salida para avanzar.
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+## Niveles
 
-## Gradle
+- **Nivel 1 - Mazmorra:** Introducción al juego con esqueletos y magos oscuros
+- **Nivel 2 - Torres del castillo:** Mayor dificultad con más enemigos
+- **Nivel 3 - Sala del trono:** Enfrentamiento final contra el Ogro
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+## Enemigos
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+- **Esqueleto:** Patrulla de lado a lado, ataca cuerpo a cuerpo
+- **Mago Oscuro:** Detecta al jugador y lanza proyectiles
+- **Ogro:** Jefe final, persigue al jugador y ataca cuerpo a cuerpo
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+## Controles
+
+| Acción | Tecla |
+|--------|-------|
+| Mover izquierda | ← / A |
+| Mover derecha | → / D |
+| Saltar | Espacio / ↑ / W |
+| Doble salto | Espacio dos veces |
+| Disparar | F |
+| Pausa | ESC |
+
+## Características
+
+- 3 niveles diferenciados con enemigos y dificultad progresiva
+- Sistema de puntuación con Top 10 persistente
+- Menú de pausa con opciones de sonido
+- Dificultad configurable (Fácil, Normal, Difícil)
+- Animaciones y sonidos completos para todos los personajes
+- Sistema de vidas con invencibilidad temporal tras recibir daño
+
+## Ejecutar el juego
+
+Para ejecutar el juego necesitas tener Java instalado. Genera el JAR ejecutable con:
+
+```bash
+./gradlew lwjgl3:jar
+```
+
+El fichero `.jar` se genera en `lwjgl3/build/libs/`. Ejecútalo con:
+
+```bash
+java -jar DungeonEscape-1.0.0.jar
+```
+
+O simplemente haz doble clic en el fichero `.jar`.
+
+## Desarrollo
+
+Este proyecto usa [Gradle](https://gradle.org/) para gestionar dependencias.
+
+Comandos útiles:
+- `./gradlew lwjgl3:run` — ejecuta el juego desde el código fuente
+- `./gradlew lwjgl3:jar` — genera el JAR ejecutable
+- `./gradlew clean` — limpia los ficheros compilados
+
+## Tecnologías
+
+- Java 21
+- libGDX 1.14.0
+- LWJGL3
+
+## Autor
+
+Marcos Martínez Vijuesca — DAM, Centro San Valero, Zaragoza (2025-2026)
