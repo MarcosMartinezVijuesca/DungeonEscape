@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.svalero.dungeonescape.DungeonEscape;
 import com.svalero.dungeonescape.entities.EnemyProjectile;
@@ -18,6 +20,7 @@ import com.svalero.dungeonescape.entities.npc.Skeleton;
 import com.svalero.dungeonescape.managers.GameState;
 import com.svalero.dungeonescape.managers.SoundManager;
 import com.svalero.dungeonescape.ui.HUD;
+import com.svalero.dungeonescape.utils.AnimationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +60,12 @@ public class GameScreen implements Screen {
     // Puerta de salida nivel 1 [x, y, width, height]
     private float[] exitDoor = {2330, 40, 40, 80};
     private boolean exitVisible = false;
-
+    private Animation<TextureRegion> doorAnim;
+    private float doorStateTime = 0f;
+    private boolean doorOpening = false;
+    private TextureRegion doorClosedTexture;
+    private TextureRegion doorOpenTexture;
+    private TextureRegion entryDoorTexture;
     public GameScreen(DungeonEscape game) {
         this.game = game;
     }
@@ -75,6 +83,23 @@ public class GameScreen implements Screen {
 
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
+
+        // Animación puerta de salida
+        doorOpening = false;
+            doorClosedTexture = new TextureRegion(new Texture(
+                Gdx.files.internal("sprites/environment/doors/door_closed.png")));
+            doorOpenTexture = new TextureRegion(new Texture(
+                Gdx.files.internal("sprites/environment/doors/door_open.png")));
+            String[] doorPaths = {
+                "sprites/environment/doors/door_closed.png",
+                "sprites/environment/doors/door_open.png"
+            };
+            doorAnim = AnimationHelper.loadAnimationFromFiles(doorPaths, 0.6f);
+            doorAnim.setPlayMode(Animation.PlayMode.NORMAL);
+
+        entryDoorTexture = new TextureRegion(new Texture(
+            Gdx.files.internal("sprites/environment/doors/door_open.png")));
+        entryDoorTexture.flip(true, false);
 
         hud = new HUD();
         state = GameState.getInstance();
@@ -130,6 +155,9 @@ public class GameScreen implements Screen {
         darkMages.add(new DarkMage(2100, 40, m));
 
         ogre = null;
+
+        exitVisible = true;
+        doorStateTime = 0f;
     }
 
     // ==================== NIVEL 2 ====================
@@ -176,6 +204,10 @@ public class GameScreen implements Screen {
         darkMages.add(new DarkMage(2000, 40, m));
 
         ogre = null;
+
+        doorOpening = false;
+        doorStateTime = 0f;
+        exitVisible = true;
 
     }
 
@@ -233,16 +265,32 @@ public class GameScreen implements Screen {
         }
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        drawExit();
-        shapeRenderer.end();
-        game.batch.setProjectionMatrix(camera.combined);
         drawPlatforms();
+        shapeRenderer.end();
 
-        // SpriteBatch para jugador y NPCs con cámara del juego
+        // SpriteBatch para jugador, NPCs, puerta y proyectiles
         game.batch.setProjectionMatrix(camera.combined);
         game.batch.begin();
+
+        // Puerta de salida
+        if (exitVisible && doorAnim != null) {
+            if (doorOpening) {
+                doorStateTime += delta;
+                TextureRegion frame = doorAnim.getKeyFrame(doorStateTime);
+                if (frame != null) {
+                    frame.flip(true, false);
+                    game.batch.draw(frame, exitDoor[0], exitDoor[1], 80, 120);
+                    frame.flip(true, false);
+                }
+            } else if (doorAnim.isAnimationFinished(doorStateTime)) {
+                game.batch.draw(doorOpenTexture, exitDoor[0], exitDoor[1], 80, 120);
+            } else {
+                game.batch.draw(doorClosedTexture, exitDoor[0], exitDoor[1], 80, 120);
+            }
+        }
+
         player.render(game.batch);
-        for (Projectile p : projectiles) p.render(game.batch); // ← añadir aquí
+        for (Projectile p : projectiles) p.render(game.batch);
         for (Skeleton s : skeletons) {
             if (s.isAlive() || s.isDying()) s.render(game.batch);
         }
@@ -255,6 +303,11 @@ public class GameScreen implements Screen {
         if (ogre != null && (ogre.isAlive() || ogre.isDying())) {
             ogre.render(game.batch);
         }
+
+        if (currentLevel > 1) {
+            game.batch.draw(entryDoorTexture, 50, 40, 80, 120);
+        }
+
         game.batch.end();
 
         // HUD con cámara fija
@@ -292,6 +345,14 @@ public class GameScreen implements Screen {
         for (DarkMage m : darkMages) m.update(delta, player.getX(), player.getY());
         if (ogre != null) ogre.update(delta, player.getX(), player.getY());
 
+        if (exitVisible && !doorOpening) {
+            float distToDoor = Math.abs(player.getX() - exitDoor[0]);
+            if (distToDoor < 150f) {
+                doorOpening = true;
+                doorStateTime = 0f;
+            }
+        }
+
         handleProjectileNPCCollisions();
         handleNPCPlayerCollisions();
         handleMageProjectileCollisions();
@@ -316,9 +377,6 @@ public class GameScreen implements Screen {
     }
 
     private void checkExit() {
-        exitVisible = true;
-
-        // Nivel 3: victoria directa al morir el ogro
         if (currentLevel == 3 && ogre != null && !ogre.isAlive()) {
             SoundManager.getInstance().stopMusic();
             game.setScreen(new WinScreen(game));
@@ -351,15 +409,6 @@ public class GameScreen implements Screen {
                 game.setScreen(new WinScreen(game));
             }
         }
-    }
-
-    private void drawExit() {
-        if (!exitVisible) return;
-        // Puerta parpadeante en verde
-        shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.rect(exitDoor[0], exitDoor[1], exitDoor[2], exitDoor[3]);
-        shapeRenderer.setColor(Color.LIME);
-        shapeRenderer.rect(exitDoor[0] + 5, exitDoor[1] + 5, exitDoor[2] - 10, exitDoor[3] - 10);
     }
 
     // ==================== COLISIONES ====================
@@ -425,13 +474,13 @@ public class GameScreen implements Screen {
                 player.takeDamage((int) (10 * m), true);
             }
         }
-        if (ogre != null && ogre.isAlive() &&
-            ogre.overlaps(player.getX() - 80, player.getY(),
-                player.getWidth() + 150, player.getHeight())) {
-            player.takeDamage((int)(25 * m), false);
+        if (ogre != null && ogre.isAlive()) {
+            float dist = ogre.getX() - player.getX();
+            if (dist > -80f && dist < 60f) {
+                player.takeDamage((int) (25 * m), false);
+            }
         }
     }
-
     private void handleMageProjectileCollisions() {
         float m = state.getDifficultyMultiplier();
         for (DarkMage dm : darkMages) {
